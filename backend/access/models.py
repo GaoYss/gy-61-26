@@ -53,6 +53,7 @@ class AlarmEvent(models.Model):
         FORCED_OPEN = "forced_open", "暴力开门"
         DEVICE_OFFLINE = "device_offline", "设备离线"
         BLACKLIST = "blacklist", "黑名单告警"
+        NIGHTTIME_DENIED = "nighttime_denied", "夜间拒绝开门"
 
     class Level(models.TextChoices):
         LOW = "low", "低"
@@ -113,3 +114,25 @@ class DoorOpenLog(models.Model):
 
     def __str__(self):
         return f"{self.opener_name} {self.get_result_display()} {self.opened_at:%Y-%m-%d %H:%M}"
+
+
+class NighttimeRule(models.Model):
+    device = models.OneToOneField(AccessDevice, on_delete=models.CASCADE, related_name="nighttime_rule")
+    start_time = models.TimeField(help_text="夜间时段开始时间，例如 22:00")
+    end_time = models.TimeField(help_text="夜间时段结束时间，例如 06:00")
+    enabled = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["device__device_code"]
+
+    def __str__(self):
+        return f"{self.device.name} 夜间规则 ({self.start_time:%H:%M} - {self.end_time:%H:%M})"
+
+    def is_nighttime(self, check_time=None):
+        if check_time is None:
+            check_time = timezone.now()
+        check_time = timezone.localtime(check_time).time()
+        if self.start_time <= self.end_time:
+            return self.start_time <= check_time <= self.end_time
+        return check_time >= self.start_time or check_time <= self.end_time

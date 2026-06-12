@@ -11,6 +11,7 @@ export function useAccessData() {
     visitors: [],
     alarms: [],
     logs: [],
+    nighttimeRules: [],
   });
 
   useEffect(() => {
@@ -18,15 +19,16 @@ export function useAccessData() {
 
     async function load() {
       try {
-        const [stats, devices, visitors, alarms, logs] = await Promise.all([
+        const [stats, devices, visitors, alarms, logs, nighttimeRules] = await Promise.all([
           accessApi.stats(),
           accessApi.devices(),
           accessApi.visitors(),
           accessApi.alarms(),
           accessApi.doorLogs(),
+          accessApi.nighttimeRules(),
         ]);
         if (mounted) {
-          setState({ loading: false, error: "", stats, devices, visitors, alarms, logs });
+          setState({ loading: false, error: "", stats, devices, visitors, alarms, logs, nighttimeRules });
         }
       } catch (error) {
         if (mounted) {
@@ -41,5 +43,14 @@ export function useAccessData() {
     };
   }, []);
 
-  return useMemo(() => state, [state]);
+  const refreshNighttimeRules = async () => {
+    try {
+      const rules = await accessApi.nighttimeRules();
+      setState((current) => ({ ...current, nighttimeRules: rules }));
+    } catch (error) {
+      console.error("Failed to refresh nighttime rules:", error);
+    }
+  };
+
+  return useMemo(() => ({ ...state, refreshNighttimeRules }), [state]);
 }

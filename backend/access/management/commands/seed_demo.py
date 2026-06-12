@@ -1,9 +1,9 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-from access.models import AccessDevice, AlarmEvent, DoorOpenLog, VisitorPass
+from access.models import AccessDevice, AlarmEvent, DoorOpenLog, NighttimeRule, VisitorPass
 
 
 class Command(BaseCommand):
@@ -89,11 +89,29 @@ class Command(BaseCommand):
             },
         )
 
+        NighttimeRule.objects.update_or_create(
+            device=main_gate,
+            defaults={
+                "start_time": datetime.strptime("22:00", "%H:%M").time(),
+                "end_time": datetime.strptime("06:00", "%H:%M").time(),
+                "enabled": True,
+            },
+        )
+        NighttimeRule.objects.update_or_create(
+            device=garage_gate,
+            defaults={
+                "start_time": datetime.strptime("23:00", "%H:%M").time(),
+                "end_time": datetime.strptime("05:00", "%H:%M").time(),
+                "enabled": True,
+            },
+        )
+
         log_rows = [
             (main_gate, visitor, "李明", DoorOpenLog.OpenerType.VISITOR, DoorOpenLog.CredentialMethod.QRCODE, DoorOpenLog.Result.SUCCESS, now - timedelta(minutes=20), ""),
             (main_gate, None, "陈先生", DoorOpenLog.OpenerType.RESIDENT, DoorOpenLog.CredentialMethod.FACE, DoorOpenLog.Result.SUCCESS, now - timedelta(minutes=14), ""),
             (garage_gate, None, "未知人员", DoorOpenLog.OpenerType.VISITOR, DoorOpenLog.CredentialMethod.QRCODE, DoorOpenLog.Result.DENIED, now - timedelta(minutes=9), "访客二维码已过期"),
             (garage_gate, None, "物业管理员", DoorOpenLog.OpenerType.ADMIN, DoorOpenLog.CredentialMethod.REMOTE, DoorOpenLog.Result.SUCCESS, now - timedelta(minutes=4), ""),
+            (main_gate, None, "可疑人员", DoorOpenLog.OpenerType.VISITOR, DoorOpenLog.CredentialMethod.FACE, DoorOpenLog.Result.DENIED, now - timedelta(hours=3), "未授权人脸"),
         ]
         for device, pass_obj, name, opener_type, method, result, opened_at, reason in log_rows:
             DoorOpenLog.objects.update_or_create(

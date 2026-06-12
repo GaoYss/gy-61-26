@@ -34,4 +34,8 @@ export const accessApi = {
     const query = params.toString();
     return request(`/door-logs/${query ? `?${query}` : ""}`).then(unwrapList);
   },
+  nighttimeRules: () => request("/nighttime-rules/").then(unwrapList),
+  createNighttimeRule: (data) => request("/nighttime-rules/", { method: "POST", body: JSON.stringify(data) }),
+  updateNighttimeRule: (id, data) => request(`/nighttime-rules/${id}/`, { method: "PUT", body: JSON.stringify(data) }),
+  deleteNighttimeRule: (id) => request(`/nighttime-rules/${id}/`, { method: "DELETE" }),
 };

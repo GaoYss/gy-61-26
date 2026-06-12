@@ -4,8 +4,8 @@ from rest_framework import filters, viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import AccessDevice, AlarmEvent, DoorOpenLog, VisitorPass
-from .serializers import AccessDeviceSerializer, AlarmEventSerializer, DoorOpenLogSerializer, VisitorPassSerializer
+from .models import AccessDevice, AlarmEvent, DoorOpenLog, NighttimeRule, VisitorPass
+from .serializers import AccessDeviceSerializer, AlarmEventSerializer, DoorOpenLogSerializer, NighttimeRuleSerializer, VisitorPassSerializer
 
 
 class DeviceViewSet(viewsets.ModelViewSet):
@@ -70,6 +70,27 @@ class DoorLogViewSet(viewsets.ModelViewSet):
             )
         return queryset
 
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        self._check_nighttime_rule(instance)
+
+    def _check_nighttime_rule(self, log):
+        if log.result != DoorOpenLog.Result.DENIED:
+            return
+        try:
+            rule = NighttimeRule.objects.get(device=log.device, enabled=True)
+        except NighttimeRule.DoesNotExist:
+            return
+        if rule.is_nighttime(log.opened_at):
+            AlarmEvent.objects.create(
+                device=log.device,
+                alarm_type=AlarmEvent.AlarmType.NIGHTTIME_DENIED,
+                level=AlarmEvent.Level.HIGH,
+                title=f"{log.device.name} 夜间拒绝开门告警",
+                description=f"时段 {rule.start_time:%H:%M}-{rule.end_time:%H:%M} 内检测到拒绝开门：{log.opener_name}，原因：{log.failure_reason or '未授权'}。请值班人员立即复核。",
+                occurred_at=log.opened_at,
+            )
+
 
 class StatsView(APIView):
     def get(self, request):
@@ -89,3 +110,11 @@ class StatsView(APIView):
                 ),
             }
         )
+
+
+class NighttimeRuleViewSet(viewsets.ModelViewSet):
+    queryset = NighttimeRule.objects.select_related("device")
+    serializer_class = NighttimeRuleSerializer
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ["device__name", "device__device_code", "device__location"]
+    ordering_fields = ["start_time", "end_time", "created_at"]

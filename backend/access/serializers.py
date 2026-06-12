@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import AccessDevice, AlarmEvent, DoorOpenLog, VisitorPass
+from .models import AccessDevice, AlarmEvent, DoorOpenLog, NighttimeRule, VisitorPass
 
 
 class AccessDeviceSerializer(serializers.ModelSerializer):
@@ -39,4 +39,14 @@ class DoorOpenLogSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DoorOpenLog
+        fields = "__all__"
+
+
+class NighttimeRuleSerializer(serializers.ModelSerializer):
+    device_name = serializers.CharField(source="device.name", read_only=True)
+    device_code = serializers.CharField(source="device.device_code", read_only=True)
+    device_location = serializers.CharField(source="device.location", read_only=True)
+
+    class Meta:
+        model = NighttimeRule
         fields = "__all__"

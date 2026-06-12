@@ -5,6 +5,7 @@ import { AlarmCenter } from "./modules/alarms/AlarmCenter";
 import { Dashboard } from "./modules/dashboard/Dashboard";
 import { DeviceManagement } from "./modules/devices/DeviceManagement";
 import { DoorLogSearch } from "./modules/logs/DoorLogSearch";
+import { NighttimeRuleManagement } from "./modules/nighttime/NighttimeRuleManagement";
 import { VisitorRecords } from "./modules/visitors/VisitorRecords";
 import { useAccessData } from "./hooks/useAccessData";
 
@@ -20,6 +21,7 @@ export default function App() {
       visitors: <VisitorRecords {...props} />,
       alarms: <AlarmCenter {...props} />,
       logs: <DoorLogSearch {...props} />,
+      nighttime: <NighttimeRuleManagement {...props} />,
     };
     return views[activeView] || views.dashboard;
   }, [accessData, activeView]);

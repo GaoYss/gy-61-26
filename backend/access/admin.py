@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import AccessDevice, AlarmEvent, DoorOpenLog, VisitorPass
+from .models import AccessDevice, AlarmEvent, DoorOpenLog, NighttimeRule, VisitorPass
 
 
 @admin.register(AccessDevice)
@@ -29,3 +29,10 @@ class DoorOpenLogAdmin(admin.ModelAdmin):
     list_display = ("device", "opener_name", "opener_type", "credential_method", "result", "opened_at")
     search_fields = ("opener_name", "failure_reason")
     list_filter = ("result", "opener_type", "credential_method", "device")
+
+
+@admin.register(NighttimeRule)
+class NighttimeRuleAdmin(admin.ModelAdmin):
+    list_display = ("device", "start_time", "end_time", "enabled", "created_at")
+    search_fields = ("device__name", "device__device_code")
+    list_filter = ("enabled", "device")

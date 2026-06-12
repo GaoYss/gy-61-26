@@ -1,4 +1,4 @@
-import { Bell, DoorOpen, FileSearch, LayoutDashboard, ShieldCheck, UsersRound } from "lucide-react";
+import { Bell, DoorOpen, FileSearch, LayoutDashboard, Moon, ShieldCheck, UsersRound } from "lucide-react";
 
 const navItems = [
   { id: "dashboard", label: "运行总览", icon: LayoutDashboard },
@@ -6,6 +6,7 @@ const navItems = [
   { id: "visitors", label: "访客记录", icon: UsersRound },
   { id: "alarms", label: "异常报警", icon: Bell },
   { id: "logs", label: "开门日志", icon: FileSearch },
+  { id: "nighttime", label: "夜间规则", icon: Moon },
 ];
 
 export function AppShell({ activeView, onChangeView, children }) {
